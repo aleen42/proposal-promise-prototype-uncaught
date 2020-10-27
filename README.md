@@ -4,8 +4,6 @@ ECMAScript Proposal, specs, and reference implementation for `Promise.uncaught`
 
 Spec drafted by [@Aleen](https://github.com/aleen42).
 
-This proposal is currently [stage 1](https://github.com/tc39/proposals/) of the [process](https://tc39.github.io/process-document/).
-
 ### Motivation
 
 - To set up a default handler for any promises without catching the result of rejection, like what [`unhandledRejection`](https://nodejs.org/api/process.html#process_event_unhandledrejection) has done in Node.

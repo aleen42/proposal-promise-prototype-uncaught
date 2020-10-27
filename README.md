@@ -1,60 +1,51 @@
-# template-for-proposals
+## `Promise.uncaught`
 
-A repository template for ECMAScript proposals.
+ECMAScript Proposal, specs, and reference implementation for `Promise.uncaught`
 
-## Before creating a proposal
+Spec drafted by [@Aleen](https://github.com/aleen42).
 
-Please ensure the following:
-  1. You have read the [process document](https://tc39.github.io/process-document/)
-  1. You have reviewed the [existing proposals](https://github.com/tc39/proposals/)
-  1. You are aware that your proposal requires being a member of TC39, or locating a TC39 delegate to "champion" your proposal
+This proposal is currently [stage 1](https://github.com/tc39/proposals/) of the [process](https://tc39.github.io/process-document/).
 
-## Create your proposal repo
+### Motivation
 
-Follow these steps:
-  1.  Click the green ["use this template"](https://github.com/tc39/template-for-proposals/generate) button in the repo header. (Note: Do not fork this repo in GitHub's web interface, as that will later prevent transfer into the TC39 organization)
-  1.  Go to your repo settings “Options” page, under “GitHub Pages”, and set the source to the **main branch** under the root (and click Save, if it does not autosave this setting)
-      1. check "Enforce HTTPS"
-      1. On "Options", under "Features", Ensure "Issues" is checked, and disable "Wiki", and "Projects" (unless you intend to use Projects)
-      1. Under "Merge button", check "automatically delete head branches"
-<!--
-  1.  Avoid merge conflicts with build process output files by running:
-      ```sh
-      git config --local --add merge.output.driver true
-      git config --local --add merge.output.driver true
-      ```
-  1.  Add a post-rewrite git hook to auto-rebuild the output on every commit:
-      ```sh
-      cp hooks/post-rewrite .git/hooks/post-rewrite
-      chmod +x .git/hooks/post-rewrite
-      ```
--->
-  3.  ["How to write a good explainer"][explainer] explains how to make a good first impression.
+- To set up a default handler for any promises without catching the result of rejection, like what [`unhandledRejection`](https://nodejs.org/api/process.html#process_event_unhandledrejection) has done in Node.
+- Read enhancement corresponding to `Promise.prototype.uncaught` discussed in [the group](https://es.discourse.group/t/promise-prototype-uncaught/507/3)?
 
-      > Each TC39 proposal should have a `README.md` file which explains the purpose
-      > of the proposal and its shape at a high level.
-      >
-      > ...
-      >
-      > The rest of this page can be used as a template ...
+    In the following snippet, `Promise.prototype.catch` has the same desired result.
 
-      Your explainer can point readers to the `index.html` generated from `spec.emu`
-      via markdown like
+    ```js
+    const handler = () => console.log('uncaught'), caught = r => r > 1, ignore = () => {};
+    Promise.reject(1).uncaught(handler); // => "uncaught"
+    Promise.reject(1).uncaught(handler).catch(caught); // => "uncaught"
+    Promise.reject(1).catch(caught).uncaught(handler); // => won't fired as already been caught
+    Promise.reject(1).then(ignore, caught).uncuaght(handler); // => won't fired as already been caught  
+    ```
 
-      ```markdown
-      You can browse the [ecmarkup output](https://ACCOUNT.github.io/PROJECT/)
-      or browse the [source](https://github.com/ACCOUNT/PROJECT/blob/HEAD/spec.emu).
-      ```
+### Syntax
 
-      where *ACCOUNT* and *PROJECT* are the first two path elements in your project's Github URL.
-      For example, for github.com/**tc39**/**template-for-proposals**, *ACCOUNT* is "tc39"
-      and *PROJECT* is "template-for-proposals".
+```
+Promise.uncaught(promise, handler); 
+```
 
+#### Parameters
 
-## Maintain your proposal repo
+- `promise`: the promise you want to handle uncaught situations.
+- `handler`: the callback function called when the promise has not uncaught rejections. Any result returned from this function won't change the state of the whole promise chain.
 
-  1. Make your changes to `spec.emu` (ecmarkup uses HTML syntax, but is not HTML, so I strongly suggest not naming it ".html")
-  1. Any commit that makes meaningful changes to the spec, should run `npm run build` and commit the resulting output.
-  1. Whenever you update `ecmarkup`, run `npm run build` and commit any changes that come from that dependency.
+#### Returns
 
-  [explainer]: https://github.com/tc39/how-we-work/blob/HEAD/explainer.md
+Returns a `Promise`, which can be used for next step of the whole promise chain.
+
+### Usage
+
+```js
+const catchCode = (expected, cb) => code => code !== expected ? Promise.reject(code) : cb();
+const promise = async () => { /* may reject any code ... */ return Promise.reject(anyCode); };
+
+Promise.uncaught(promise, () => {
+    /* ... default handler for any other code */
+    console.log('catch any other unknown code');
+})
+    .catch(catchCode(1, () => console.log('catch 1')))
+    .catch(catchCode(2, () => console.log('catch 2')));    
+```

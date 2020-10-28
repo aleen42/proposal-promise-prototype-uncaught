@@ -32,7 +32,7 @@ Promise.uncaught(promise, handler);
 
 #### Returns
 
-Returns a `Promise`, which can be used for next step of the whole promise chain.
+Returns a `Promise`, which can be used for the next step of the whole promise chain.
 
 ### Usage
 

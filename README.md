@@ -47,3 +47,5 @@ Promise.uncaught(promise, () => {
     .catch(catchCode(1, () => console.log('catch 1')))
     .catch(catchCode(2, () => console.log('catch 2')));    
 ```
+
+***Notice: If you have any suggestions or ideas about this proposal? Appreciate your discussions via issues.***
